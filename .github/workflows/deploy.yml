@@ -1,7 +1,7 @@
 name: DevOps Pro Deployment
 on:
-  push:
-    branches: [ "main" ]
+  # push:
+  #   branches: [ "main" ]
 env:
   PROJECT_NAME: ${{ vars.PROJECT_NAME }}
   AWS_REGION: ${{ vars.AWS_REGION }}

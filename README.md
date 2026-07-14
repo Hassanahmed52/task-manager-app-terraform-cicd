@@ -1,7 +1,5 @@
 # Task Management App
 
-> **Note:** This was originally a group project built during a DevOps course at GIKI. My contribution and the work reflected in this fork focused on debugging and fixing the local Docker Compose deployment (database connection issues, table-name mismatch, environment variable inconsistencies, and a container startup race condition), and running the full deployment pipeline end-to-end. Forked from the original team repository.
-
 This application consists of a _frontend built with React_ and a _backend built with Flask_. The backend uses a _MariaDB_ instance for storing data. It allows users to _manage tasks_, _create new tasks_, and _remove existing tasks_.
 
 This project features a complete **DevOps pipeline** with **Infrastructure as Code (Terraform)** and **automated CI/CD (GitHub Actions)** for deployment to AWS.
@@ -73,7 +71,6 @@ This project features a complete **DevOps pipeline** with **Infrastructure as Co
 
 3. Visit `http://localhost:3000` to use the app.
 
-> **Note (Linux/SELinux users):** if `db` fails to start with a `Permission denied` error reading `/docker-entrypoint-initdb.d/`, this is SELinux blocking the bind mount. The `init.db` volume in `docker-compose.yml` uses the `:z` flag to fix this — see the compose file.
 
 ### Manual Local Development (without Docker)
 
@@ -267,23 +264,6 @@ The `.github/workflows/deploy.yml` file implements a two-stage CI/CD pipeline:
 - `DB_PASSWORD` - Database password
 - `DB_NAME` - Database name
 
-## Bugs Found & Fixed
-
-While setting up and running this project independently, the following issues were identified and resolved:
-
-- **Env var typo**: `main.py` referenced a mistyped variable (`DB__NAME` instead of `DB_NAME`), which silently produced a `None` database name.
-- **Env var mismatch (local vs. prod)**: the local backend expects `DB_USERNAME`, while the CI/CD pipeline generated `DB_USER` in production — aligned both to `DB_USERNAME`.
-- **Table name mismatch**: the SQLAlchemy `Task` model had no `__tablename__`, so it defaulted to a `task` table, while `init.sql` created a `tasks` table — the app was silently reading/writing an empty table. Fixed by explicitly setting `__tablename__ = 'tasks'`.
-- **SELinux permission error** (Fedora/RHEL-based hosts): MariaDB failed to read the `init.db` bind mount due to SELinux context restrictions. Fixed by adding the `:z` mount flag in `docker-compose.yml`.
-- **Startup race condition**: `depends_on` only waits for the `db` container to start, not for MariaDB to be ready to accept connections, causing the backend to occasionally crash on first boot. Fixed by adding a proper `healthcheck` to the `db` service and switching `depends_on` to `condition: service_healthy`.
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test locally with Docker
-5. Submit a pull request
 
 ## License
 
