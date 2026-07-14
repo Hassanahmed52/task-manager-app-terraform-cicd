@@ -9,17 +9,23 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+pymysql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB__NAME')}"
+app.config['SQLALCHEMY_DATABASE_URI'] = (
+    f"mysql+pymysql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}"
+    f"@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
+)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
+
 class Task(db.Model):
+    __tablename__ = 'tasks'
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(50), nullable=False)
 
-# Check if the tasks table exists; if not, create it
+
 with app.app_context():
     db.create_all()
+
 
 @app.route('/tasks', methods=['GET', 'POST'])
 def handle_tasks():
@@ -34,6 +40,7 @@ def handle_tasks():
         db.session.commit()
         return jsonify({'message': 'Task added successfully'})
 
+
 @app.route('/tasks/<int:task_id>', methods=['DELETE'])
 def remove_task(task_id):
     task = Task.query.get(task_id)
@@ -44,6 +51,6 @@ def remove_task(task_id):
     else:
         return jsonify({'message': 'Task not found'}), 404
 
+
 if __name__ == '__main__':
     app.run(debug=True, host="0.0.0.0")
-

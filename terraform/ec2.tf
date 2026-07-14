@@ -11,7 +11,7 @@ data "aws_ami" "ubuntu" {
     values = ["hvm"]
   }
 
-  owners = ["099720109477"] 
+  owners = ["099720109477"]
 }
 
 resource "tls_private_key" "exam_key" {
@@ -20,16 +20,16 @@ resource "tls_private_key" "exam_key" {
 }
 
 resource "aws_key_pair" "generated_key" {
-  key_name   = "ssh-key" 
+  key_name   = var.key_name
   public_key = tls_private_key.exam_key.public_key_openssh
 }
 
 resource "aws_instance" "ec2_web_server" {
-  ami = data.aws_ami.ubuntu.id
+  ami           = data.aws_ami.ubuntu.id
   instance_type = "t3.micro"
 
-  subnet_id = data.aws_subnets.default.ids[0]
-  vpc_security_group_ids = [aws_security_group.security_group.id]
+  subnet_id                   = data.aws_subnets.default.ids[0]
+  vpc_security_group_ids      = [aws_security_group.security_group.id]
   associate_public_ip_address = true
 
   key_name = aws_key_pair.generated_key.key_name
