@@ -2,26 +2,34 @@ services:
   db:
     image: mariadb:10.11
     container_name: devops_db
-    restart: always
+    restart: unless-stopped
     env_file:
       - .env
     volumes:
       - db_data:/var/lib/mysql
-      - ./backend/init.db:/docker-entrypoint-initdb.d
+      - ./backend/init.db:/docker-entrypoint-initdb.d:z
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   backend:
     build: ./backend
     container_name: devops_backend
+    restart: unless-stopped
     ports:
       - "5000:5000"
     env_file:
       - ./backend/.env
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   frontend:
     build: ./frontend
     container_name: devops_frontend
+    restart: unless-stopped
     ports:
       - "3000:3000"
     env_file:
